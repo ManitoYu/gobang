@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Chess</title>
+	<style>
+		
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+	
+		body {
+			background-color: #ccc;
+		}
+
+		ul {
+			list-style: none;
+		}
+		
+		.container {
+			height: 600px;
+			width: 600px;
+			position: fixed;
+			left: 50%;
+			top: 50%;
+			margin: -300px 0 0 -300px;
+		}
+
+		.board {
+			width: 600px;
+			height: 600px;	
+		}
+		
+		.board:after {
+			display: block;
+			content: "";
+			clear: both;
+		}
+
+		.board-front {
+			width: 630px;
+			height: 630px;	
+			position: absolute;
+			left: -15px;
+			top: -15px;
+		}
+
+		.board li {
+			width: 30px;
+			height: 30px;
+			float: left;
+			background-color: #d8b496;
+			border: 1px solid #555;
+			cursor: pointer;
+		}
+
+		.board-front li {
+			background: transparent;
+
+			border-color: transparent;
+			border-radius: 50%;
+		}
+	</style>
+</head>
+<body>
+	
+	<div class="container">
+		<ul class="board board-back"></ul>
+		<ul class="board board-front"></ul>
+	</div>
+	
+	<script>
+
+		/*
+			// 构造函数不会被覆盖
+			function test() {
+				alert();
+			}
+			
+			// 构造函数会被覆盖
+			var test = function () {
+				alert();
+			};
+			
+			test = new test();
+			console.log(test.__proto__);
+		*/
+
+		;(function () {
+
+			var NX = 21;
+			var NY = 21;
+
+			var BACK = (NX - 1) * (NY - 1);
+			var FRONT = NX * NY;
+
+			// 黑白分布
+			var layout = [];
+			for (var i = 0; i < NY; i += 1) {
+				layout.push('222222222222222222222'.split(''));
+			}
+
+			var bg = document.querySelector('.board-back');
+			var board = document.querySelector('.board-front');
+
+			var list = '';
+			// 初始化棋盘背景
+			for (i = 0; i < BACK; i += 1) {
+				list += '<li n="' + i + '"></li>';
+			}
+			bg.innerHTML = list;
+
+			// 初始化棋盘
+			for (i = 0; i < FRONT - BACK; i += 1) {
+				list += '<li n="' + (BACK + i) + '"></li>';
+			}
+			board.innerHTML = list;
+
+			// 闭包计数
+			var getColor = (function () {
+				var color = '#fff';
+				return function () {
+					color = color == '#fff' ? '#000' : '#fff';
+					return color;
+				};
+			})();
+
+			// 事件委托
+			board.addEventListener('click', function (e) {
+				var src = e.srcElement;
+				if (src.tagName == 'LI' && ! src.style.backgroundColor) {
+					// 获取棋子颜色
+					var c = getColor();
+					src.style.backgroundColor = c;
+
+					// 当前坐标
+					var n = src.getAttribute('n');
+					var x = Math.floor(n % NX);
+					var y = Math.floor(n / NY);
+					layout[y][x] = c == '#000' ? 1 : 0;
+					
+					// 水平线
+					judge(layout[y], c);
+
+					// 垂直线
+					var vl = [];
+					for (var j = 0; j < NY; j += 1) {
+						vl.push(layout[j][x]);
+					}
+					judge(vl, c);
+					
+					// 左斜线表达式 a = b - (x - y)
+					var d = x - y;
+					var ol = [];
+					for (var b = d; b <= NX - 1; b += 1) {
+						if (b < 0 || b - d > NX - 1) continue; // 越界
+						ol.push(layout[b - d][b]);
+					}
+					judge(ol, c);
+		
+					// 右斜线表达式 a = - b + (x + y)
+					var s = x + y;
+					var or = [];
+					for (b = s; b >= 0; b -= 1) {
+						if (b > NX - 1 || s - b > NX - 1) continue; // 越界
+						or.push(layout[- b + s][b]);
+					}
+					judge(or, c); 
+				}
+			}, false);
+
+			function judge(lineArr, color) {
+				var win = false;
+				win = color == '#000' ? /1{5}/.test(lineArr.join('')) : /0{5}/.test(lineArr.join(''));
+				if (win) {
+					alert((color == '#000' ? '黑方' : '白方') + '赢了');
+					window.location.reload();
+				}				
+			}
+
+			// td对象有cellIndex可以获取当前td在tr中的索引
+			// tr对象有rowIndex可以获取当前tr在table中的索引
+
+		})();
+
+	</script>
+</body>
+</html>
